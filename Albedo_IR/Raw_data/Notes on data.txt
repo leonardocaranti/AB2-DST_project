@@ -1,0 +1,3 @@
+Notes about the data: 
+- First the four mirror surfaces. Average temperature. The four mirror backs are in the same order.
+- The baffle average temperatures plus 4 points selected on the four sides of the baffle, and then the outer and inner  parts of the back.
