@@ -1,0 +1,98 @@
+# -------------- Baffle_surfaces.csv
+
+Period [s]: 5674.5
+Eclipse period [s]: 2679.0
+Sunlight period [s]: 2995.5
+
+Period [s]: 5674.5
+Eclipse period [s]: 5004.0
+Sunlight period [s]: 670.5
+
+Period [s]: 5674.5
+Eclipse period [s]: 5010.0
+Sunlight period [s]: 664.5
+
+Period [s]: 5675.0
+Eclipse period [s]: 2723.0
+Sunlight period [s]: 2952.0
+
+Period [s]: 5674.5
+Eclipse period [s]: 3332.0
+Sunlight period [s]: 2342.5
+
+Period [s]: 5675.0
+Eclipse period [s]: 2048.0
+Sunlight period [s]: 3627.0
+
+Period [s]: 5675.0
+Eclipse period [s]: 3981.0
+Sunlight period [s]: 1694.0
+
+Period [s]: 5675.0
+Eclipse period [s]: 2064.0
+Sunlight period [s]: 3611.0
+
+
+# ------------- Mirror_segments.csv
+
+Period [s]: 5681.0
+Eclipse period [s]: 3321.0
+Sunlight period [s]: 2360.0
+
+Period [s]: 5681.0
+Eclipse period [s]: 4582.5
+Sunlight period [s]: 1098.5
+
+Period [s]: 5674.5
+Eclipse period [s]: 3288.0
+Sunlight period [s]: 2386.5
+
+Period [s]: 5675.0
+Eclipse period [s]: 3286.5
+Sunlight period [s]: 2388.5
+
+Period [s]: 5674.5
+Eclipse period [s]: 2104.0
+Sunlight period [s]: 3570.5
+
+Period [s]: 5675.0
+Eclipse period [s]: 2102.5
+Sunlight period [s]: 3572.5
+
+Period [s]: 5674.5
+Eclipse period [s]: 3239.0
+Sunlight period [s]: 2435.5
+
+Period [s]: 5674.5
+Eclipse period [s]: 2103.0
+Sunlight period [s]: 3571.5
+
+
+# --------------- Secondary_mirror.csv
+
+Period [s]: 5674.5
+Eclipse period [s]: 2072.5
+Sunlight period [s]: 3602.0
+
+Period [s]: 5674.5
+Eclipse period [s]: 2057.5
+Sunlight period [s]: 3617.0
+
+Period [s]: 5674.5
+Eclipse period [s]: 2055.5
+Sunlight period [s]: 3619.0
+
+Period [s]: 5674.5
+Eclipse period [s]: 2074.5
+Sunlight period [s]: 3600.0
+
+Period [s]: 5674.5
+Eclipse period [s]: 5260.5
+Sunlight period [s]: 414.0
+
+Period [s]: 5675.0
+Eclipse period [s]: 2046.0
+Sunlight period [s]: 3629.0
+
+
+
