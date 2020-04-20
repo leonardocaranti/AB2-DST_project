@@ -2,7 +2,6 @@ from TAS_Data_reading import choose_dataset
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 # -------------------------- Spline definition --------------------------
 def S(x, xj, a, b, c, d):
     return a + b * (x-xj) + c * (x-xj)**2 + d * (x-xj)**3
@@ -60,21 +59,30 @@ def spline_natural(xi, fi, xx):
 
 
 # -------------------------- Spline implementation and plotting --------------------------
-def spline():
-    # Possible filenames: 'AB2_data/AB2/Baffle_surfaces.csv', 'AB2_data/AB2/Mirror_segments.csv', 'AB2_data/AB2/Secondary_mirror.csv'
-    element_number = 0
-    data = choose_dataset('AB2_data/AB2/Secondary_mirror.csv')[0]       # Might have to change directory based on where you saved file on own your computer
-    xi, fi = np.array([data[i][element_number] for i in range(1, len(data))]), np.array([data[i][1] for i in range(1, len(data))])
+def spline(filename, element_number, xx, t_start, t_end, plotting = False):
 
-    t_start, t_end, t_steps = 0, 15000, 10001         # Set boundary for graph and spline evaluation
-    xx = np.linspace(t_start, t_end, t_steps)         # Set datapoints to evaluate splne at
+    data = choose_dataset(filename)[element_number]        
+    xi, fi = np.array([data[i][0] for i in range(1, len(data))]), np.array([data[i][1] for i in range(1, len(data))])
 
-    plt.title('Element ' + data[0]); plt.xlabel("Time [s]"); plt.ylabel("Temperature [°C]")
-    plt.plot(xi, fi, label='Experimental data', marker='o'); plt.plot(xx, spline_natural(xi, fi, xx), label='Spline reconstruction')
-    plt.legend(loc='best'); plt.xlim(t_start, t_end)
-    plt.show()
+    spline = spline_natural(xi, fi, xx)
+
+    if plotting:
+        plt.title('Element ' + data[0]); plt.xlabel("Time [s]"); plt.ylabel("Temperature [°C]")
+        plt.plot(xi, fi, label='Experimental data', marker='o'); plt.plot(xx, spline , label='Spline reconstruction')
+        plt.legend(loc='best'); plt.xlim(t_start, t_end)
+        plt.show()
+
+    return spline
+
 
 # The following command just makes sure that whetever is inside of this is run only when this file is run. 
 # For example, if I was to import this file (Interpolation.py) into another file, whetever is inside of this loop would not be run. 
 if __name__ == '__main__': 
-    spline()
+
+    # Possible filenames: 'AB2_data/AB2/Baffle_surfaces.csv', 'AB2_data/AB2/Mirror_segments.csv', 'AB2_data/AB2/Secondary_mirror.csv'
+    # Might have to change directory based on where you saved file on own your computer
+    filename, element_number = 'AB2_data/AB2/Baffle_surfaces.csv', 2
+    t_start, t_end, t_steps = 0, 15000, 10001         # Set boundary for graph and spline evaluation
+    xx = np.linspace(t_start, t_end, t_steps)         # Set datapoints to evaluate splne at
+    
+    spline = spline(filename, element_number, xx, t_start, t_end, plotting = False)
