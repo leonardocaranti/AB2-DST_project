@@ -26,44 +26,62 @@ def plot_derivs():
 
 # ------------------------- Incoming heat flux calculations -------------------------------
 
-t_start, t_end, dt = 0, 20000, 0.5                            # Set boundary for graph and spline evaluation
+t_start, t_end, dt = 0, 15000, 0.5                            # Set boundary for graph and spline evaluation
 t_steps = int(t_end/dt) + 1    
 xx = np.linspace(t_start, t_end, t_steps)                     # Set datapoints to evaluate splne at
 
 
-splines = np.zeros(shape = (6, t_steps))
+splines = np.zeros(shape = (8, t_steps))
 
-for i in range(2, 8):
+for i in range(0, 8):
 
     filename, element_number = 'AB2_data/AB2/Mirror_segments.csv', i
     spline = Interpolation.spline(filename, element_number, xx, t_start, t_end, plotting = False)
     splines[i-2] = spline
 
-T_front = (splines[0] + splines[2] + splines[4])/3 + 273.15
-T_back = (splines[1] + splines[3] + splines[5])/3 + 273.15
-T_avg = (splines[0] + splines[2] + splines[4] + splines[1] + splines[3] + splines[5])/6 + 273.15
+T_front = (splines[0] + splines[2] + splines[4] + splines[6])/4 + 273.15
+T_back = (splines[1] + splines[3] + splines[5] + splines[7])/4 + 273.15
+T_avg = (splines[0] + splines[2] + splines[4] + splines[1] + splines[3] + splines[5] + splines[6] + splines[7])/8 + 273.15
 dT_dt = cd_deriv(xx, T_avg)[0]
 
 T_front, T_back, T_avg, xx = T_front[1:-1], T_back[1:-1], T_avg[1:-1], xx[1:-1]
 sigma = 5.670374*10**(-8)
-e, A, m, C = 0.035, .656*.354*3, 6.5, 690
+#e, A, m, C = 0.035, .656*.354*4, 6.5, 690
+#e, A, m, C = 0.035, 1.0751, 13.2, 750
+#e, A, m, C = 0.14, .2, 8.45, 690
+e, A, m, C = 0.035, 1.0751, 6.5, 690
 
-Q = e * sigma * (T_front*T_front*T_front*T_front + T_back*T_back*T_back*T_back)  +  1/A * m * C * dT_dt
+Q_out , Q_balance = e * sigma * (T_front*T_front*T_front*T_front + T_back*T_back*T_back*T_back), 1/A * m * C * dT_dt
+#Q_out , Q_balance = e_front * sigma * (T_front*T_front*T_front*T_front) + e_back * sigma * (T_back*T_back*T_back*T_back), 1/A * m * C * dT_dt
+Q_in = Q_out + Q_balance
 
 
 # ------------------------- Plotting -------------------------------
 
-plt.suptitle("Primary Mirror Incident Flux Intensity and Average Temperature")
+plt.suptitle("Primary Mirror Flux Intensity and Temperature")
 
-plt.subplot(211)
+plt.subplot(221)
 plt.title("Incident flux intensity over time")
-plt.plot(xx, Q, color = 'red'); plt.ylabel(r"$ Flux\ intensity\ [W / m^2]  $")
+plt.plot(xx, Q_in, color = 'red'); plt.ylabel(r"$ Incident\ flux\ intensity\ [W / m^2]  $"); plt.xlabel(r"$ Time\ [s] $")
 plt.minorticks_on()
 plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
 
-plt.subplot(212)
-plt.title("Average temperature over time")
-plt.plot(xx, T_avg, color = 'orange');plt.ylabel(r"$ Average\ temperature\ [K] $"); plt.xlabel(r"$ Time\ [s] $")
+plt.subplot(222)
+plt.title("Radiating flux intensity over time")
+plt.plot(xx, Q_out, color = 'purple'); plt.ylabel(r"$ Radiating\ flux\ intensity\ [W / m^2]  $"); plt.xlabel(r"$ Time\ [s] $")
 plt.minorticks_on()
 plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
+
+plt.subplot(223)
+plt.title("Radiation balance over time")
+plt.plot(xx, Q_balance, color = 'orange');plt.ylabel(r"$ Flux\ balance\ intensity\ [W / m^2]  $"); plt.xlabel(r"$ Time\ [s] $")
+plt.minorticks_on()
+plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
+
+plt.subplot(224)
+plt.title("Average temperature over time")
+plt.plot(xx, T_avg, color = 'blue');plt.ylabel(r"$ Average\ temperature\ [K] $"); plt.xlabel(r"$ Time\ [s] $")
+plt.minorticks_on()
+plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
+
 plt.show()
