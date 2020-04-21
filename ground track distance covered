@@ -13,10 +13,10 @@ from math import pi
 #lat is in 
 
 #define the latitude --> change this for the final function, now i took it as a constant
-lattitude_degrees = 60
+lat_degrees = 60
 
 
-def v_groundfunction(lattitude_degrees):
+def v_groundfunction(lat_degrees):
     
     v_absground = 7.062206527
     inclination = 98.31743089052
@@ -25,7 +25,7 @@ def v_groundfunction(lattitude_degrees):
     #first I'll calculate the velocity of the earth at a certain lattitude
     
     #lattitude into radians
-    lat= lattitude_degrees*pi/180
+    lat= lat_degrees*pi/180
     #now we need the radius of the earth at that lattitude (in km)
     smallr = cos(lat)*6378.137
     #following this we can calculate the circumferrance of the earth at that point
@@ -47,6 +47,21 @@ def v_groundfunction(lattitude_degrees):
     
     return (v_ground)
 
-print(v_groundfunction())
+
+lat_init = float(input("initial latitude="))
+lat_final= float(input("final latitude="))
+
+ground_dist = abs(lat_init - lat_final)*112.1799
+
+print(ground_dist)
+
+#integration
+s=0
+lat_degrees = lat_init
+while (lat_degrees<= lat_final):
+    s = s+((lat_degrees-lat_init)*112.177)/(v_groundfunction(lat_degrees))
+    lat_degrees = lat_degrees + 1
+
+print(s)
 
 
