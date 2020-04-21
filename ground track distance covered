@@ -62,6 +62,6 @@ while (lat_degrees<= lat_final):
     s = s+((lat_degrees-lat_init)*112.177)/(v_groundfunction(lat_degrees))
     lat_degrees = lat_degrees + 1
 
-print(s)
+print(s/60, "seconds")
 
 
