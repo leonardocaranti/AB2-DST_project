@@ -1,1 +1,52 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 20 15:56:50 2020
+
+@author: aster
+"""
+from math import cos
+from math import pi
+
+#v is in km/s
+# lattitude_degrees is in degrees (0 at the equator, 90 at the poles)
+#lat is in 
+
+#define the latitude --> change this for the final function, now i took it as a constant
+lattitude_degrees = 60
+
+
+def v_groundfunction():
+    
+    v_absground = 7.062206527
+    inclination = 98.31743089052
+    
+   
+    #first I'll calculate the velocity of the earth at a certain lattitude
+    
+    #lattitude into radians
+    lat= lattitude_degrees*pi/180
+    #now we need the radius of the earth at that lattitude (in km)
+    smallr = cos(lat)*6378.137
+    #following this we can calculate the circumferrance of the earth at that point
+    circ_smallr = 2*smallr*pi
+    #velocity earth at that point (distance/one day)
+    v_earth = circ_smallr / (23*60*60+56*60+4)
+    
+    
+    #now we have to do a vector substraction of the velocity of the s/c and the earth
+    
+    #first we need to take the cos(180-inclination) of the velocity vector
+    v_xaxis = cos((180-inclination)*pi/180)*v_absground
+    #now we have to substract those
+    v_relativexaxis = v_xaxis - v_earth
+    #devide by the cos(inclination) to have the final value
+    v_ground = v_relativexaxis/cos((180-inclination)*pi/180)
+    
+
+    
+    return (v_ground)
+
+print(v_groundfunction())
+
 
