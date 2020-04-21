@@ -16,7 +16,7 @@ from math import pi
 lattitude_degrees = 60
 
 
-def v_groundfunction():
+def v_groundfunction(lattitude_degrees):
     
     v_absground = 7.062206527
     inclination = 98.31743089052
