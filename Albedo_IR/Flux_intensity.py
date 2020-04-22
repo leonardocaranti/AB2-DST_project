@@ -35,7 +35,7 @@ splines = np.zeros(shape = (8, t_steps))
 
 for i in range(0, 8):
 
-    filename, element_number = 'AB2_data/AB2/Mirror_segments.csv', i
+    filename, element_number = 'AB2_data/AB2/Mirror_segments.csv', i  #CHANGE THIS BASED ON THE LOCATION ON YOUR DEVICE!
     spline = Interpolation.spline(filename, element_number, xx, t_start, t_end, plotting = False)
     splines[i-2] = spline
 
@@ -46,42 +46,39 @@ dT_dt = cd_deriv(xx, T_avg)[0]
 
 T_front, T_back, T_avg, xx = T_front[1:-1], T_back[1:-1], T_avg[1:-1], xx[1:-1]
 sigma = 5.670374*10**(-8)
-#e, A, m, C = 0.035, .656*.354*4, 6.5, 690
-#e, A, m, C = 0.035, 1.0751, 13.2, 750
-#e, A, m, C = 0.14, .2, 8.45, 690
-e, A, m, C = 0.035, 1.0751, 6.5, 690
+e_front, e_back, A, m, C = 0.035, 0.05, 1.0751, 6.5, 690
 
-Q_out , Q_balance = e * sigma * (T_front*T_front*T_front*T_front + T_back*T_back*T_back*T_back), 1/A * m * C * dT_dt
-#Q_out , Q_balance = e_front * sigma * (T_front*T_front*T_front*T_front) + e_back * sigma * (T_back*T_back*T_back*T_back), 1/A * m * C * dT_dt
-Q_in = Q_out + Q_balance
+Q_out , Q_balance = e_front * sigma * (T_front*T_front*T_front*T_front) + e_back * sigma * (T_back*T_back*T_back*T_back), 1/A * m * C * dT_dt
+Q_in = (Q_out + Q_balance)/e_front
 
+avg = 717.5
+Albedo = Q_in - avg
 
 # ------------------------- Plotting -------------------------------
-
+"""
 plt.suptitle("Primary Mirror Flux Intensity and Temperature")
 
-plt.subplot(221)
+plt.subplot(211)
 plt.title("Incident flux intensity over time")
-plt.plot(xx, Q_in, color = 'red'); plt.ylabel(r"$ Incident\ flux\ intensity\ [W / m^2]  $"); plt.xlabel(r"$ Time\ [s] $")
+plt.plot(xx, Q_in, color = 'red', label='Total incident flux'); plt.ylabel(r"$ Incident\ flux\ intensity\ [W / m^2]  $")
+plt.axhline(y=avg, color='black', linestyle='dotted', label='Infrared Radiation flux')
+plt.legend(loc='best')
 plt.minorticks_on()
 plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
 
-plt.subplot(222)
-plt.title("Radiating flux intensity over time")
-plt.plot(xx, Q_out, color = 'purple'); plt.ylabel(r"$ Radiating\ flux\ intensity\ [W / m^2]  $"); plt.xlabel(r"$ Time\ [s] $")
-plt.minorticks_on()
-plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
-
-plt.subplot(223)
-plt.title("Radiation balance over time")
-plt.plot(xx, Q_balance, color = 'orange');plt.ylabel(r"$ Flux\ balance\ intensity\ [W / m^2]  $"); plt.xlabel(r"$ Time\ [s] $")
-plt.minorticks_on()
-plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
-
-plt.subplot(224)
+plt.subplot(212)
 plt.title("Average temperature over time")
 plt.plot(xx, T_avg, color = 'blue');plt.ylabel(r"$ Average\ temperature\ [K] $"); plt.xlabel(r"$ Time\ [s] $")
 plt.minorticks_on()
 plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
 
+plt.show()
+"""
+
+plt.title("Primary Mirror Albedo Flux Intensity over Time")
+plt.plot(xx, Albedo, color = '#e5823e')
+plt.axhline(y=0, color='#837367', alpha=0.6, lw=0.6)
+plt.ylabel(r"$ Albedo\ flux\ intensity\ [W / m^2]  $"); plt.xlabel(r"$ Time\ [s] $")
+plt.minorticks_on()
+plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
 plt.show()
