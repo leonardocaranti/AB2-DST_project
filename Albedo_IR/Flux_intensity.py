@@ -26,7 +26,7 @@ def plot_derivs():
 
 # ------------------------- Incoming heat flux calculations -------------------------------
 
-t_start, t_end, dt = 0, 56000, 0.5                            # Set boundary for graph and spline evaluation
+t_start, t_end, dt = 0, 25000, 0.5                            # Set boundary for graph and spline evaluation
 t_steps = int(t_end/dt) + 1    
 xx = np.linspace(t_start, t_end, t_steps)                     # Set datapoints to evaluate splne at
 
@@ -38,15 +38,15 @@ for i in range(0, 8):
     spline = Interpolation.spline(filename, element_number, xx, t_start, t_end, plotting = False)
     splines[i-2] = spline
 
-T_front = (splines[0] + splines[2] + splines[4] + splines[6])/4 + 273.15
-T_back = (splines[1] + splines[3] + splines[5] + splines[7])/4 + 273.15
-T_avg = (splines[0] + splines[2] + splines[4] + splines[1] + splines[3] + splines[5] + splines[6] + splines[7])/8 + 273.15
+T_front = (splines[0])/1 + 273.15
+T_back = (splines[1])/1 + 273.15
+T_avg = (splines[0] + splines[1])/2 + 273.15
 T_E = np.mean(T_avg)
 dT_dt = cd_deriv(xx, T_avg)[0]
 
 T_front, T_back, T_avg, xx = T_front[1:-1], T_back[1:-1], T_avg[1:-1], xx[1:-1]
 sigma = 5.670374*10**(-8)
-e_front, e_back, A, m, C = 0.035, 0.05, 1.076/4, 6.5/4, 690
+e_front, e_back, A, m, C = 0.035, 0.05, 1.076/4, 6. , 690
 
 Q_out , Q_balance = e_front * sigma * (T_front*T_front*T_front*T_front) + e_back * sigma * (T_back*T_back*T_back*T_back), 1/A * m * C * dT_dt
 Q_in = (Q_out + Q_balance)/e_front
@@ -57,11 +57,11 @@ Albedo_true = Q_in - avg
 
 
 # ------------------------- Plotting -------------------------------
-""" # Temperature and total flux plot 
-plt.suptitle("Primary Mirror Flux Intensity and Temperature (the wierd element only!)")
+# Temperature and total flux plot 
+plt.suptitle("Primary Mirror Flux Intensity and Temperature")
 
 plt.subplot(211)
-plt.title("Incident flux intensity over time (the wierd element only!)")
+plt.title("Incident Flux Intensity Over Time")
 plt.plot(xx, Q_in, color = 'red', label='Total incident flux'); plt.ylabel(r"$ Incident\ flux\ intensity\ [W / m^2]  $")
 plt.axhline(y=avg, color='black', linestyle='dotted', label='Infrared Radiation flux (calculated for first eclipse period only)')
 plt.legend(loc='best')
@@ -69,7 +69,7 @@ plt.minorticks_on()
 plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
 
 plt.subplot(212)
-plt.title("Average temperature over time (the wierd element only!)")
+plt.title("Average Temperature Over Time (rear and front)")
 plt.plot(xx, T_avg, color = 'green', label='Sun-lit period')
 plt.plot(xx[int(t_eclipse_1/dt):int(t_eclipse_2/dt)], T_avg[int(t_eclipse_1/dt):int(t_eclipse_2/dt)], color = '#292b45', label='Eclipse period')
 plt.ylabel(r"$ Average\ temperature\ [K] $"); plt.xlabel(r"$ Time\ [s] $")
@@ -79,7 +79,6 @@ plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=0.2)
 
 plt.show()
 
-"""
 
 def make_f_positive(f): #input: array of numbers
     for i in range(0,len(f)):
