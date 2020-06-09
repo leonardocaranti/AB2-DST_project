@@ -1,9 +1,10 @@
+# Runtime: about 3 minutes
+# You will also need all albedo files
 # -------------------------Assumptions/changes---------------------
 # correction on R near poles for globe to flat map
-# added correction on R for J2 effect (11 degree shift per orbit)
-# albedo data file scaled to 0-0.35 matching found albedo
-# 
+# no orbit shift (neglect j2) as data is 10 times the same
 
+# Import modules
 from progress.bar import Bar
 import Interpolation
 import numpy as np
@@ -15,64 +16,9 @@ import os, sys, time
 import image
 from tqdm import tqdm_gui
 import warnings
-# ------------------------- Derivatives -------------------------------
+from Flux_intensity import xx, Albedo_true
 
-# Forward, backward euler and central difference derivatives
-def fd_deriv(x, f): return (f[1:] - f[:-1])/(x[1:] - x[:-1]), x[:-1]
-def bd_deriv(x, f): return (f[1:] - f[:-1])/(x[1:] - x[:-1]), x[1:]
-def cd_deriv(x, f): return (f[2:] - f[:-2])/(x[2:] - x[:-2]), x[1:-1]
-
-def plot_derivs():
-    f_fd, x_fd = fd_deriv(xx, spline)
-    f_bd, x_bd = bd_deriv(xx, spline)
-    f_cd, x_cd = cd_deriv(xx, spline)
-
-    plt.suptitle('Element ' + str(element_number) + ' in ' + filename)
-    plt.subplot(211); plt.title("Spline reconstruction"); plt.xlim(t_start, t_end); plt.xlabel("Time [s]"); plt.ylabel("Temperature [°C]")
-    plt.plot(xx, spline, label='Spline reconstruction')
-    plt.subplot(212); plt.title("Numerical derivative");  plt.xlim(t_start, t_end); plt.xlabel("Time [s]"); plt.ylabel(r"$ {\delta T}/{\delta t}\  [K / t] $")
-    plt.plot(x_cd, f_cd, label='Central difference', linestyle='-'); plt.plot(x_bd, f_bd, label='Backward difference derivative', linestyle='-')
-    plt.plot(x_fd, f_fd, label='Forward difference', linestyle='-'); plt.legend(loc='best')
-    plt.axhline(y=0, color = 'k')
-    plt.show()
-
-
-# ------------------------- Incoming heat flux calculations -------------------------------
-
-t_start, t_end, dt = 0, 15000, 0.708047411                       # Set boundary for graph and spline evaluation
-t_steps = int(t_end/dt) + 1    
-xx = np.linspace(t_start, t_end, t_steps)                     # Set datapoints to evaluate splne at
-
-
-splines = np.zeros(shape = (8, t_steps))
-
-for i in range(0, 8):
-
-    filename, element_number = 'Raw_data/Mirror_segments.csv', i  #CHANGE THIS BASED ON THE LOCATION ON YOUR DEVICE!
-    spline = Interpolation.spline(filename, element_number, xx, t_start, t_end, plotting = False)
-    splines[i-2] = spline
-
-T_front = (splines[0] + splines[2] + splines[4] + splines[6])/4 + 273.15
-T_back = (splines[1] + splines[3] + splines[5] + splines[7])/4 + 273.15
-T_avg = (splines[0] + splines[2] + splines[4] + splines[1] + splines[3] + splines[5] + splines[6] + splines[7])/8 + 273.15
-dT_dt = cd_deriv(xx, T_avg)[0]
-
-T_front, T_back, T_avg, xx = T_front[1:-1], T_back[1:-1], T_avg[1:-1], xx[1:-1]
-sigma = 5.670374*10**(-8)
-e_front, e_back, A, m, C = 0.035, 0.05, 1.0751, 6.5, 690
-
-Q_out , Q_balance = e_front * sigma * (T_front*T_front*T_front*T_front) + e_back * sigma * (T_back*T_back*T_back*T_back), 1/A * m * C * dT_dt
-Q_in = (Q_out + Q_balance)/e_front
-
-avg = 717.5
-
-Albedo = 0.35*((Q_in - avg)/356.5929343)
-for q in range(len(Albedo)):
-    if Albedo[q] < 0:
-        Albedo[q] = 0
-    
-# -------------------------  World map -------------------------------
-# initial values
+# Data tables
 dogleg = True
 ktab = []
 sumtab = []
@@ -82,12 +28,13 @@ plot2sum = []
 kplot2tab = []
 
 #load map and its data
-img = Image.open('Earthalbedo.png').convert('LA')
-img.save('Earthalbedogrey.png')
-FILENAME='Earthalbedogrey.png' #image can be in gif jpeg or png format 
+img = Image.open('Albedomap_nov.png').convert('LA')
+img.save('Albedomap_grey_nov.png')
+FILENAME='Albedomap_grey_nov.png' #image can be in gif jpeg or png format 
 im=Image.open(FILENAME).convert('RGB')
 pix=im.load()
 
+# Define longitude of ascending node and loop statements
 k, k_final, dk = -180, 180, 1
 longrun = False
 zeroiteration = True
@@ -108,9 +55,10 @@ while dogleg == True:
         y2tab = []
         albedotab = []
         ttab = []
+        lattab = []
         difftab = []
 
-        #obtain orbit of best fit
+        #Several runs over range of possible k at different precisions
         if k > k_final and zeroiteration == True:
             zeroiteration = False
             firstiteration = True
@@ -137,9 +85,9 @@ while dogleg == True:
             seconditeration == False
             k = ktab[sumtab.index(min(sumtab))] 
             longrun = True
-            n = 119
+            n = 88 #maximum visible range
 
-        #initial valus
+        #initial values
         jump = False
         orbit = True
         V_y = 0
@@ -148,21 +96,23 @@ while dogleg == True:
         pxold = 1000
         pyold = 1000
         v_absground = 7.062206527 #km/s
-        inclination_orbit = 98.31743089052 #degrees
+        inclination_orbit = 97.42 #degrees
         R_e = 6378.137
         longitude = k
         x = (longitude/180)*(20037.50834)
         x_old = x
-        y = 18048.35
+        y = 18183.91
         y_old = y
         y_new = y
 
-        #running loop for the orbit
+        #running loop for the orbit shape
         while y_new <= y:
+            # Angle shift over earth map
             if abs(x - x_old) <= 20038:
                 fact = (abs(1-(abs(x-x_old)/10019)))*(-inclination_orbit+180)
             else:
                 fact = (abs(3-(abs(x-x_old)/10019)))*(-inclination_orbit+180)
+            # Physical model for descending flight
             if V_y <=0:
                 latitude = (y_new/111.318845)-90
                 R = 6378.137*cos(radians(latitude)) #km
@@ -175,6 +125,7 @@ while dogleg == True:
                 y_new = y_old + (5/abs(v_abs))*V_y
                 if y_new <= 20038 - y:
                     V_y = 0.01
+            #Physical model for ascending flight
             if V_y > 0:
                 latitude = (y_new/111.318845)-90
                 R = 6378.137*cos(radians(latitude)) #km
@@ -185,6 +136,7 @@ while dogleg == True:
                 V_x = v_abs*sin(radians(v_angle))*(6378.137/R) 
                 x_new = x_old + (5/abs(v_abs))*V_x
                 y_new = y_old + (5/abs(v_abs))*V_y
+            
             #add data of position and albedo
             if x_new >= 20038:
                 dub = x_new
@@ -198,8 +150,10 @@ while dogleg == True:
             if jump == True and dogleg == False:
                 y2tab.append(y_new)
                 x2tab.append(x_new)
-            pixel_x = int(2159*((x_new + 20038)/40076))
-            pixel_y = int(1079-1079*(y_new/20038))
+            pixel_x = int(1439*((x_new + 20038)/40076))
+            pixel_y = int(719-719*(y_new/20038))
+
+            # Read data from greyscale picture 
             if longrun == True:
                 if pixel_x == pxold and pixel_y == pyold:
                     albedotab.append(albedotab[-1])
@@ -209,83 +163,88 @@ while dogleg == True:
                     angtab = []
                     for f in range(-n, m):
                         for g in range( -abs(n - abs(f)), abs(m - abs(f) + 1)):
-                            ang = cos(atan((sqrt(((18.554*g)**2)+((18.554*f)**2)))/505.1964))
+                            ang = cos(atan((sqrt(((27.831*g)**2)+((27.831*f)**2)))/505.1964)) + radians((sqrt(((27.831*g)**2)+((27.831*f)**2))/(2*pi*R_e))*360) 
                             angtab.append(ang)
-                            if pixel_x + f <= 2159:
+                            if pixel_x + f <= 1439:
                                 Pf = pixel_x + f
                             else:
-                                pf = pixel_x + f - 2160
+                                pf = pixel_x + f - 1440
 
-                            if pixel_y + g <= 1079:
+                            if pixel_y + g <= 719:
                                 Py = pixel_y + g
                             else:
-                                Py = pixel_y + g - 1080
-                            dattab.append(ang*0.35*((pix[Pf, Py][0])/255))
+                                Py = pixel_y + g - 720
+                            dattab.append(ang*1371*((pix[Pf, Py][0])/255))
                     albedotab.append(sum(dattab)/sum(angtab))
             else:
-                albedotab.append(0.35*((pix[pixel_x, pixel_y][0])/255))
+                albedotab.append(1372*((pix[pixel_x, pixel_y][0])/255))
+            if t >= 3120 and t <= 5195:
+                albedotab[-1] = 0
 
             #update time and y for next loop            
             ttab.append(t)
+            lattab.append(latitude)
             t = t + (5/abs(v_abs))
             pxold = pixel_x
             pyold = pixel_y
         
-        # plot graph 3 and 4
+        # Difference between data and this model
         for w in range(len(albedotab)):
-            difftab.append(abs(Albedo[w+2119]-albedotab[w]))
+            difftab.append(abs(Albedo_true[w+2119]-albedotab[w]))
         sumtab.append((sum(difftab)/len(difftab)))
         
         ktab.append(k)
         print(k)
         k = k + dk
- 
-#delete final k as it is a run for the plot
-del plotsum[-1]
-del kplottab[-1]
-del plotsum[-1]
-del kplottab[-1]
 
+
+print("---------------------------------------------------------")
 print("Orbital period = ", ttab[-1], "[s]")
-print("Average error = ", sumtab[-1], "[-]")
-print("Right ascending node = ", ktab[-1] + 90 , "[degrees]")
+print("Average error = ", sumtab[-1], "[W/m^2]")
+print("Right ascending node = ", ktab[-1] , "[degrees]")
 
 #----------------------Plotting all graphs----------------------------------------------
-im = plt.imread("EarthAlbedo.png")
-fig = plt.figure(figsize=(15, 5)) 
-gs = gridspec.GridSpec(1, 5, width_ratios=[10, 1, 1, 1, 3]) 
+im = plt.imread("Albedomap_nov.png")
+fig = plt.figure(figsize=(7, 15)) 
+gs = gridspec.GridSpec(3, 1, height_ratios=[10, 2, 4]) 
 ax0 = plt.subplot(gs[0])
-plt.title("ground track")
+plt.title("Ground Track of the DST Satellite")
 plt.axis('off')
 ax0.plot(xtab, ytab, linewidth = 2, color="red")
 ax0.plot(x2tab, y2tab, linewidth = 2, color="red")
 plt.xlim(-20038, 20038)
 plt.ylim(0,20038)
 plt.imshow(im, aspect="auto", extent=(-20038, 20038, 0, 20038))
-ax1 = plt.subplot(gs[1])
-plt.title("albedo dataset")
-plt.xlabel("Albedo [-]")
-plt.ylabel("Time [s]")
-ax1.plot(Albedo, xx - 1500)
-plt.ylim(0, 5675)
-ax2 = plt.subplot(gs[2])
-plt.title("albedo map")
-plt.xlabel("Albedo [-]")
-plt.ylabel("Time [s]")
-ax2.plot(albedotab, ttab)
-plt.ylim(0, 5675)
-ax3 = plt.subplot(gs[3])
-plt.title("difference")
-plt.xlabel("Albedo [-]")
-plt.ylabel("Time [s]")
-ax3.plot(difftab, ttab)
-plt.ylim(0, 5675)
-ax4 = plt.subplot(gs[4])
+ax1 = plt.subplot(gs[2])
+plt.title("Albedo Data Over One Orbit")
+plt.ylabel(r"$Albedo\ [W/m^2]$")
+plt.xlabel(r"$Time\ [s]$")
+ax1.plot(xx - 1500, Albedo_true, color = "blue", label='Albedo from dataset', linestyle='dotted')
+ax1.plot(ttab, albedotab, color = "red", label='Albedo from albedomap', linestyle='dashed')
+plt.legend(loc='best')
+plt.minorticks_on()
+plt.grid(which='both', axis = 'both', color='#999999', linestyle='-', alpha=5)
+plt.xlim(0, 5675)
+"""
+ax2 = plt.subplot(gs[4])
+plt.title("Albedo retrieved from the orbit over albedo map")
+plt.ylabel("Albedo [W/m^2]")
+plt.xlabel("Time [s]")
+ax2.plot(ttab, albedotab, color = "blue")
+plt.xlim(0, 5675)
+ax3 = plt.subplot(gs[6])
+plt.title("Difference between the albedo of the dataset and map")
+plt.ylabel("Albedo [W/m^2]")
+plt.xlabel("Time [s]")
+ax3.plot(ttab, difftab, color = "blue")
+plt.xlim(0, 5675)
+ax4 = plt.subplot(gs[8])
 plt.title("difference per orbit")
 plt.xlabel("right ascending node [degrees]")
-plt.ylabel("average error [-]")
+plt.ylabel("average error [W/m^2]")
 ax4.plot(kplottab, plotsum, color = "blue")
 ax4.plot(kplot2tab, plot2sum, color = "blue")
+"""
 plt.show()
 
 
